@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  llm:
+    image: ollama/ollama
+    container_name: llm
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: chroma
+    restart: always
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./chroma_data:/chroma
+    environment:
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_HTTP_PORT=8000
+
+  backend:
+    build: ./backend
+    container_name: cloud-agent-backend
+    restart: always
+    depends_on:
+      - llm
+      - chroma
+    ports:
+      - "8080:8080"
+    environment:
+      - LLM_URL=http://llm:11434/api/generate
+      - CHROMA_URL=http://chroma:8000
+      - AWS_REGION=ap-south-1
+      - AWS_DEFAULT_REGION=ap-south-1
+      # - ASSUME_ROLE_ARN=arn:aws:iam::<your_account_id>:role/<your_role>
+      - AWS_ACCESS_KEY_ID=
+      - AWS_SECRET_ACCESS_KEY=
+      - AWS_SESSION_TOKEN=
+
+  ui:
+    build: ./UI
+    container_name: cloud-agent-ui
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend

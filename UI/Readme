@@ -1,0 +1,14 @@
+
+// -------------------------
+// README.md
+# Cloud Agent UI
+
+Minimal React frontend for Cloud Agent backend.
+
+## Run locally
+```
+npm install
+npm start
+```
+
+Replace `API_BASE` in `src/services/api.js` with your backend controller URL.
