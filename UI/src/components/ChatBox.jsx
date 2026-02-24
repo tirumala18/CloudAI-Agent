@@ -5,6 +5,13 @@ import 'react-toastify/dist/ReactToastify.css';
 
 function ChatBox() {
   const [input, setInput] = useState('');
+
+  // For local testing, we are just using the keys in docker-compose.yml
+  const ACCOUNTS = [
+    { id: 'default', name: 'Local Test Account (Access Keys)' }
+  ];
+
+  const [selectedAccount, setSelectedAccount] = useState('default');
   const [messages, setMessages] = useState(() => {
     // Try to retrieve existing messages from localStorage
     const saved = localStorage.getItem('cloud_agent_messages');
@@ -42,11 +49,13 @@ function ChatBox() {
     setIsLoading(true);
 
     try {
-      const result = await executeCommand(query);
+      const result = await executeCommand(query, selectedAccount);
 
       // Attempt to prettify JSON responses
       let displayResult = result;
-      if (typeof result === 'object' && result !== null) {
+      if (result && typeof result.response === 'string') {
+        displayResult = result.response;
+      } else if (typeof result === 'object' && result !== null) {
         displayResult = JSON.stringify(result, null, 2);
       }
 
@@ -90,30 +99,44 @@ function ChatBox() {
       {/* Header Controls */}
       <div style={{
         display: 'flex',
-        justifyContent: 'flex-end',
-        padding: '12px 24px',
-        borderBottom: '1px solid var(--glass-border)',
-        background: 'rgba(255,255,255,0.15)'
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '16px 24px 0 24px',
       }}>
+        {/* Account Selector */}
+        <select
+          value={selectedAccount}
+          onChange={(e) => setSelectedAccount(e.target.value)}
+          style={{
+            padding: '6px 12px',
+            borderRadius: '16px',
+            background: 'rgba(255,255,255,0.5)',
+            border: '1px solid rgba(0,0,0,0.1)',
+            color: 'var(--text-primary)',
+            fontSize: '0.85rem',
+            outline: 'none',
+            cursor: 'pointer',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+          }}
+        >
+          {ACCOUNTS.map(acc => (
+            <option key={acc.id} value={acc.id}>{acc.name}</option>
+          ))}
+        </select>
         <button
           onClick={clearHistory}
           style={{
             background: 'transparent',
-            border: '1px solid rgba(255,255,255,0.1)',
+            border: 'none',
             color: 'var(--text-secondary)',
-            padding: '6px 12px',
-            borderRadius: '8px',
             fontSize: '0.8rem',
             cursor: 'pointer',
-            transition: 'all 0.2s ease',
           }}
           onMouseOver={(e) => {
             e.target.style.color = '#ef4444';
-            e.target.style.borderColor = 'rgba(239, 68, 68, 0.4)';
           }}
           onMouseOut={(e) => {
             e.target.style.color = 'var(--text-secondary)';
-            e.target.style.borderColor = 'rgba(255,255,255,0.1)';
           }}
         >
           Clear Chat
@@ -151,12 +174,12 @@ function ChatBox() {
               color: msg.sender === 'user' ? '#ffffff' : 'var(--text-primary)',
               padding: '16px 20px',
               borderRadius: msg.sender === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
-              border: msg.sender === 'bot' ? '1px solid var(--glass-border)' : 'none',
+              border: 'none',
               whiteSpace: 'pre-wrap',
               wordBreak: 'break-word',
               fontSize: '1rem',
               lineHeight: '1.6',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)'
             }}>
               {msg.text}
             </div>
@@ -191,19 +214,15 @@ function ChatBox() {
       {/* Input area */}
       <div style={{
         padding: '24px',
-        borderTop: '1px solid var(--glass-border)',
-        background: 'rgba(255,255,255,0.15)',
       }}>
         <div style={{
           display: 'flex',
-          background: 'rgba(255,255,255,0.35)',
-          borderRadius: '16px',
-          padding: '8px',
-          paddingLeft: '16px',
+          background: 'rgba(255,255,255,0.7)',
+          borderRadius: '24px',
+          padding: '8px 8px 8px 16px',
           border: '1px solid rgba(0,0,0,0.05)',
           alignItems: 'center',
-          transition: 'all 0.3s',
-          boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
+          boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
         }}
           onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.3)'; e.currentTarget.style.boxShadow = '0 0 0 4px rgba(99,102,241,0.1)'; }}
           onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.05)'; e.currentTarget.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.02)'; }}
@@ -230,23 +249,20 @@ function ChatBox() {
             disabled={isLoading || !input.trim()}
             style={{
               marginLeft: '12px',
-              padding: '12px 24px',
-              borderRadius: '12px',
-              background: input.trim() && !isLoading ? 'linear-gradient(135deg, #a78bfa 0%, #f472b6 100%)' : 'rgba(0,0,0,0.05)',
-              color: input.trim() && !isLoading ? '#fff' : 'var(--text-secondary)',
+              padding: '8px 16px',
+              borderRadius: '20px',
+              background: 'rgba(0,0,0,0.05)',
+              color: 'var(--text-secondary)',
               border: 'none',
               cursor: input.trim() && !isLoading ? 'pointer' : 'not-allowed',
-              fontWeight: '600',
-              transition: 'all 0.2s',
-              boxShadow: input.trim() && !isLoading ? '0 4px 14px 0 rgba(236, 72, 153, 0.3)' : 'none',
+              fontWeight: '500',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px'
+              gap: '6px'
             }}
           >
             {isLoading ? 'Wait...' : 'Send'}
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: input.trim() && !isLoading ? 1 : 0.5 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"></line>
               <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
             </svg>

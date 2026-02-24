@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+boto3
+python-dotenv
+requests
+beautifulsoup4
+chromadb
+
+# LangChain
+langchain==0.2.17
+langchain-community==0.2.17
+langchain-ollama
+
+# Embeddings (local, no OpenAI needed)
+sentence-transformers
